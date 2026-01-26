@@ -6,6 +6,14 @@
     ],
     "settings": {
         "editor.tabSize": 4,
-        "editor.detectIndentation": false
+        "editor.detectIndentation": false,
+        "files.associations": {
+            "*.css": "tailwindcss",
+        },
+        "tailwindCSS.classAttributes": [
+            "class",
+            "className",
+            "headerClassName"
+        ]
     }
 }

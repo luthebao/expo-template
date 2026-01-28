@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Expo Router-based React Native app with web support, using NativeWind (Tailwind CSS for React Native). App name: "expo-template".
+Expo Router v6 React Native app with web support, using NativeWind 5 (Tailwind CSS for React Native). Targets iOS, Android, and web platforms.
 
 ## Commands
 
 ```bash
-pnpm start          # Start dev server (choose platform)
+pnpm start          # Start dev server (choose platform interactively)
 pnpm android        # Launch on Android emulator
 pnpm ios            # Launch on iOS simulator
 pnpm web            # Launch web app in browser
@@ -21,33 +21,51 @@ Package manager: **pnpm**
 
 ### File-Based Routing (Expo Router v6)
 
-- `app/` - Route files following Expo Router conventions
-- `app/_layout.tsx` - Root layout with font loading, splash screen, and theme provider
-- `app/(tabs)/` - Tab navigation group with `_layout.tsx` configuring tabs
+- `app/_layout.tsx` - Root layout: font loading, splash screen, providers (QueryProvider wraps everything)
+- `app/(tabs)/` - Tab navigation using `NativeTabs` (native iOS/Android tabs)
+- `app/(tabs)/home/` and `app/(tabs)/explore/` - Each tab has its own `_layout.tsx` + `index.tsx`
+- `app/modal.tsx` - Modal screen with `presentation: 'modal'`
 - `app/+not-found.tsx` - 404 error boundary
 - `app/+html.tsx` - Web-specific HTML wrapper
 
-### Component Patterns
+### State Management
 
-- `components/Themed.tsx` - Theme-aware View and Text wrappers accepting `lightColor`/`darkColor` props
-- Platform-specific files use `.web.ts` suffix (e.g., `useColorScheme.ts` vs `useColorScheme.web.ts`)
-- `useClientOnlyValue()` handles server/client rendering differences
+- **Zustand** (`stores/ui.ts`) - UI state with AsyncStorage persistence
+- **React Query** (`providers/query-client.tsx`) - Server state, staleTime: 60s, retry: 1
+- API hooks in `hooks/api/` follow pattern: `useQuery` for reads, `useMutation` for writes
+
+### Component Organization
+
+- `components/ui/` - Base UI components (Themed, Heading, GlassCard)
+- `components/containers/` - Layout containers (Container, ScrollContainer with refresh)
+- `components/layout/` - Structural components (Section, Separator)
+- `components/lib/utils.ts` - `cn()` function for Tailwind class merging (clsx + tailwind-merge)
+
+### Platform-Specific Code
+
+Files use `.web.ts` suffix for web-specific implementations:
+
+- `hooks/color-scheme.ts` (native) vs `hooks/color-scheme.web.ts` (web)
+- `hooks/client-only-value.ts` vs `hooks/client-only-value.web.ts`
 
 ### Theme System
 
-- Light/dark mode via `useColorScheme()` hook
-- Color palette defined in `constants/Colors.ts`
-- All UI components should use Themed wrappers or accept theme color props
+- `useColorScheme()` hook returns current theme
+- Colors defined in `constants/Colors.ts` (light/dark variants)
+- Themed components accept `lightColor`/`darkColor` props for overrides
+- User preference stored in Zustand: `'light' | 'dark' | 'system'`
 
-### Styling
+### Styling with NativeWind 5
 
-- NativeWind 5 (Tailwind CSS for React Native)
+- Use Tailwind classes directly: `<View className="flex-1 bg-white dark:bg-black">`
+- Merge classes with `cn()`: `cn("base-class", conditional && "extra-class")`
 - Global styles in `style/global.css`
-- Can use Tailwind classes directly on React Native components
+- Metro configured with NativeWind middleware in `metro.config.js`
 
 ## Conventions
 
 - **Path alias:** Use `@/*` for imports from project root
-- **Indentation:** 4 spaces (configured in workspace settings)
+- **Indentation:** 4 spaces
 - **TypeScript:** Strict mode enabled
 - **Typed routes:** Expo Router typed routes experiment enabled
+- **Component props:** Support `className` + `lightColor`/`darkColor` for theme overrides
